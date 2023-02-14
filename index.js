@@ -6,12 +6,12 @@ const bcrypt = require('bcrypt');
 const salt = bcrypt.genSaltSync(10);
 const secret = 'sklfslkfjslflkjsalkfalfkjsalfk'
 const jwt = require('jsonwebtoken')
-
+const cookieParser = require('cookie-parser');
 const app = express();
 app.use(cors({credentials : true, origin : 'http://localhost:3000'}))
-app.use(express.json())
-
-
+app.use(express.json());
+app.use(cookieParser());
+// Registration
 
 app.post('/register',async(req,res)=>{
 try {
@@ -25,7 +25,7 @@ try {
 }
 })
 
-
+// Login
 app.post('/login',async(req,res)=>{
     const {username,password} = req.body;
     const request = await UserModel.findOne({username})
@@ -35,7 +35,7 @@ app.post('/login',async(req,res)=>{
         //login
         jwt.sign({username, id : request._id}, secret , {}, (err,token)=>{
             if( err) throw err;
-            res.cookie('token',token).json({msg : 'valid user'})
+            res.cookie('token',token).json({msg : 'valid user',username})
         })
     }
     else{
@@ -47,10 +47,21 @@ app.post('/login',async(req,res)=>{
    }
 })
 
+// Profile checkting token
+app.get('/profile',(req,res)=>{
+    const {token} = req.cookies ;
+    jwt.verify(token, secret,{},(err,info)=>{
+        if(err) throw err;
+        res.status(200).json(info)
+    })
+})
 
 
+// logout 
 
-
+app.post('/logout',(req,res)=>{
+    res.cookie('token','').json({msg : 'success'})
+})
 const port = 5000;
 
 const start  = async() =>{
