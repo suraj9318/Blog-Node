@@ -8,7 +8,7 @@ const secret = 'sklfslkfjslflkjsalkfalfkjsalfk'
 const jwt = require('jsonwebtoken')
 
 const app = express();
-app.use(cors())
+app.use(cors({credentials : true, origin : 'http://localhost:3000'}))
 app.use(express.json())
 
 
@@ -39,11 +39,11 @@ app.post('/login',async(req,res)=>{
         })
     }
     else{
-        res.status(200).json({msg : "Wrong Credentials"});
+        res.status(400).json({msg : "Wrong Credentials"});
     }
    }
    else{
-        res.status(200).json({msg : "Wrong Credentials"});
+        res.status(400).json({msg : "Wrong Credentials"});
    }
 })
 
