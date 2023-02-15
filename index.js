@@ -106,6 +106,12 @@ app.get('/getAllPost',async(req,res)=>{
 
 })
 
+app.get('/post/:id',async(req,res)=>{
+
+    const post =await PostModel.findOne({_id:req.params.id})
+    res.send(post)
+})
+
 
 const start  = async() =>{
     try{
