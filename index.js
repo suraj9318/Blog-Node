@@ -1,16 +1,25 @@
 const express = require('express');
 const cors = require('cors');
 const UserModel = require('./models/user')
+const PostModel = require('./models/post')
 const connectDB = require('./db/connection')
 const bcrypt = require('bcrypt');
 const salt = bcrypt.genSaltSync(10);
 const secret = 'sklfslkfjslflkjsalkfalfkjsalfk'
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser');
+const multer = require('multer')
+const uploadMiddleware = multer({ dest: 'uploads/' })
+const fs = require('fs')
 const app = express();
 app.use(cors({credentials : true, origin : 'http://localhost:3000'}))
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));
 app.use(cookieParser());
+app.use('/uploads', express.static(__dirname+'/uploads'))
+
+
+
+
 // Registration
 
 app.post('/register',async(req,res)=>{
@@ -63,6 +72,40 @@ app.post('/logout',(req,res)=>{
     res.cookie('token','').json({msg : 'success'})
 })
 const port = 5000;
+
+// Create post
+app.post('/post', uploadMiddleware.single('file'), async(req,res)=>{
+    let {originalname, path} = req.file;
+    const parts = originalname.split('.');
+    const ext = parts[parts.length - 1];
+    const newPath = path+'.'+ext
+    fs.renameSync(path,newPath );
+
+    const {title, summary,content} = req.body
+    const create =await PostModel.create({
+        title,
+        summary,
+        content,
+        cover: newPath ,
+    })
+    res.json({create})
+})
+
+
+
+// getAllPost
+
+app.get('/getAllPost',async(req,res)=>{
+    const response = await PostModel.find().sort({createdAt : -1});
+    if(response.length>0){
+        res.status(200).json(response);
+    }
+    else{
+        res.status(200).json({msg : 'no result found'})
+    }
+
+})
+
 
 const start  = async() =>{
     try{
