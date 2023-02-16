@@ -10,7 +10,8 @@ const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser');
 const multer = require('multer')
 const uploadMiddleware = multer({ dest: 'uploads/' })
-const fs = require('fs')
+const fs = require('fs');
+const { findById } = require('./models/user');
 const app = express();
 app.use(cors({credentials : true, origin : 'http://localhost:3000'}))
 app.use(express.json({limit: '50mb'}));
@@ -107,11 +108,29 @@ app.get('/getAllPost',async(req,res)=>{
 })
 
 app.get('/post/:id',async(req,res)=>{
-
     const post =await PostModel.findOne({_id:req.params.id})
     res.send(post)
 })
 
+
+// edit post
+app.put('/post', uploadMiddleware.single('file'),  async(req,res)=>{
+  let newPath = null;
+    if(req.file){
+        let {originalname, path} = req.file;
+        const parts = originalname.split('.');
+        const ext = parts[parts.length - 1];
+        newPath = path+'.'+ext
+        fs.renameSync(path,newPath );
+    
+    }
+    let {id} = req.body
+   
+    const update = await PostModel.findByIdAndUpdate({_id : id},{...req.body,cover:newPath });
+
+
+    res.json(update)
+})
 
 const start  = async() =>{
     try{
